@@ -94,7 +94,7 @@ B1 = -(kt*(icmw+rw*(mw*rw+mp*(L+rw))))/(R*(dom1+dom2));
 B2 = -(kt*rw*(ip+L*mp*(L+rw)))/(R*(dom1+dom2));
 B = [0;B1;0;B2]
 C = [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
-D = [0;0;0;0]
+D = zeros(size(C,1),size(B,2));
 
 
 
@@ -147,7 +147,8 @@ fprintf('\n Part 4.2 Controllability and Observability of the system.');
 % the rank of the controllability matrix? Is the linearized system
 % completely controllable?
 fprintf('\n The controllability matrix of the system is:\n');
-control_matrix = ctrb(sss.a,sss.b)
+%control_matrix = ctrb(sss.a,sss.b)
+control_matrix = ctrb(A,B)
 fprintf('\n Checking the ranks of the controllability matrix: \n');
 rank_control_matrix = rank(control_matrix)
 fprintf('\n Checking the length of matrix A: \n');
@@ -163,7 +164,8 @@ end
 % Step 8: Analyze the observability of the linearized system with the
 % output vector as y:=x=[alpha alphadot x xdot]T
 fprintf('\n The observability matrix of the system is:');
-obser_matrix = obsv(sss.a,sss.c)
+%obser_matrix = obsv(sss.a,sss.c)
+obser_matrix = obsv(A,C)
 fprintf('\n Checking the ranks of the observability matrix: \n');
 rank_obser_matrix = rank(obser_matrix)
 fprintf('\n Checking the length of matrix A: \n');
@@ -178,6 +180,7 @@ end
 
 % Step 9: Transform the linearized system into a controllable canonical
 % form and observable canonical form
+%Per documentation Matlab by default provides the CCF form from TF 
 den_coeff = den(2:end); % deniminator coefficients of H(s)
 controlmatrix_inv = [1, den_coeff(1), den_coeff(2), den_coeff(3);
                      0, 1,            den_coeff(1), den_coeff(2);
@@ -205,7 +208,8 @@ observable_canonical_form = canon(sss, 'companion')
 fprintf('\n For our project, we chose the dynamics of the observer is at least');
 fprintf('6 times faster than the dynamics of the linearized model');
 fprintf('\n The poles of the observer is:');
-pole_obser = -6*(abs(poles)+1)
+pole_obser = -6*(abs(poles)+1) %take abs of the pole to make sure the new gain is stable and +1 it's not zero
+%%%pole_obser = 6*(poles) %mine
 fprintf('\n The estimator gain L of the system is:');
 gainL = place(transpose(A), transpose(C), pole_obser)'
 
@@ -216,29 +220,29 @@ gainL = place(transpose(A), transpose(C), pole_obser)'
 % the behavior of the system when a unit step u(t) = 1, t >=0 is aplied at
 % the input. Plot the estimated state-variables and output variables on the
 % same graph.
-
+tspan=0:0.1:10;
+% Bsim =  [0 0 0 0 ;B1 0 0 0;0 0 0 0;B2 0 0 0];
 xini = [0 0 0 0];
 xhatini = [0 0 0 0];
-sim('step11');
-figure;
+sim('step11',tspan(end));
 
-subplot(3,1,1);
-plot(time,x);
-title('Please fill in');
-xlabel('Please fill in');
-ylabel('Please fill in');
+figure(1)
+%subplot(2,1,1)
+plot(time,y,'LineWidth',2)
+hold on
+plot(time,xhat)
+hold on
+legend('y_1','y_2','y_3','y_4','x_1obv','x_2obv','x_3obv','x_4obv')
+title('Estimated state variables and output variables for gain=L & xhatini=[0 0 0 0]');
+grid on
+% subplot(2,1,2)
+% grid on
+% plot(time,y,'-.')
+% xlabel('time(sec)')
+% 
+% legend('y_1','y_2','y_3','y_4')
 
-subplot(3,1,2);
-plot(time,xhat);
-title('Please fill in');
-xlabel('Please fill in');
-ylabel('Please fill in');
-
-subplot(3,1,3);
-plot(time,y);
-title('Please fill in');
-xlabel('Please fill in');
-ylabel('Please fill in');
+hold off;
 
 % Step 12 - Consider the case when the linearized system is stabilized
 % through the use of feedback control. Using the pole placement method,
@@ -272,19 +276,22 @@ else
 
 end
 
+
 % Step 14 - Develop a Simulink model of the linearized closed-loop system 
 % (no estimator here) when the output of the system equals state variables. 
 % Add the proportional controller developed above to the Simulink
 % model and simulate the response of the closed-loop system when a unit
 % step u(t) = 1, t>=0 is applied. Plot all the outputs on the same graph
+
 sim('step14');
-figure;
-plot(time,y);
-title('Step input responses of the closed-loop system (no estimator here) when the output of the system equals state variables');
+figure(2);
+plot(t14,y14, 'LineWidth',1.5);
+title('Step input responses of the closed-loop system');
 xlabel('Time(second)');
 ylabel('');
+legend ('y_1','y_2','y_3','y_4')
 
-
+%% Fixing above
 % Step 15 - Combine the feedback controller with the state estimator. This
 % should be an easy step since both parts are designed separately already.
 % Combine the two in Simulink and simulate the system to see how it
